@@ -56,14 +56,17 @@ class Game2048():
 
     def _move(self, direction):
         self._rotate_board(direction)
-        self._move_left()
+        could_move = self._move_left()
         self._rotate_board(4-direction)
         self.highscore = max(self.score, self.highscore)
-        if self._list_empty_tiles():
+        if could_move and self._list_empty_tiles():
             self._place_randomly()
+        if self.can_move():
+            self.is_finished = True
         
         
     def _move_left(self):
+        could_move = False
         for row in range(ROWS):
             startCol = 0
             checkCol = 1
@@ -74,9 +77,11 @@ class Game2048():
                 if checkValue != 0:
                     #If equal value or empty starting point
                     if startValue == checkValue or startValue == 0:
+                        could_move = True
                         self.board[row][startCol] += checkValue
                         self.board[row][checkCol] = 0
                         if(startValue == checkValue):
+                        
                             self.score += 2*startValue
                             startCol += 1
                     #Else if unequal value
@@ -88,6 +93,7 @@ class Game2048():
                 #Empty spot on board
                 else:
                     checkCol += 1
+        return could_move
         
     def _place_randomly(self):
         empty_tiles = self._list_empty_tiles()
@@ -114,17 +120,17 @@ class Game2048():
 
 
 class GUI2048():
-    def __init__(self,root, handle_restart_clicked,highscore = 0):
+    def __init__(self,root, handle_restart_clicked):
         self.root = root 
         self.root.wm_title("2048") 
-        self.labels = [[tk.Label(self.root,text = '',font=("Helvetica", 14), width = 8, bg = "ivory3") for i in range(COLS)] for i in range(ROWS)]
+        self.tiles = [[tk.Label(self.root,text = '',font=("Helvetica", 14), width = 8, bg = "ivory3") for i in range(COLS)] for i in range(ROWS)]
         self.scoreLabel1 = tk.Label(self.root, text = "Score:", font = ("Helvetica",14), width = 5)
         self.scoreLabel2 = tk.Label(self.root, text = "0", font = ("Helvetica",12),width = 5, justify =tk.LEFT)
         self.scoreLabel1.grid(row = ROWS, column = 0)
         self.scoreLabel2.grid(row = ROWS, column = 1)
         
         self.highScoreLabel1 = tk.Label(self.root, text = "Highscore:", font = ("Helvetica",8),width = 8)
-        self.highScoreLabel2 = tk.Label(self.root, text = highscore, font = ("Helvetica",8),width = 8)
+        self.highScoreLabel2 = tk.Label(self.root, text = "", font = ("Helvetica",8),width = 8)
         self.highScoreLabel1.grid(row = ROWS+1, column = 0)
         self.highScoreLabel2.grid(row = ROWS+1, column = 1)
         
@@ -139,42 +145,42 @@ class GUI2048():
 
         for i in range(ROWS):
             for j in range(COLS):
-                self.labels[i][j].grid(row = i, column = j,padx = 2,pady = 2,ipady = 10)
+                self.tiles[i][j].grid(row = i, column = j,padx = 2,pady = 2,ipady = 10)
 
 
-    def update(self,board,score,highscore):
+    def update_tiles(self,board):
         for row in range(ROWS):
             for col in range(COLS):
                 tile = board[row][col]
                     
                 #Update tile background color
                 if math.log(tile+1,2) < len(COLORS):
-                    self.labels[row][col].config(bg = COLORS[int(math.log(tile+1,2))])
+                    self.tiles[row][col].config(bg = COLORS[int(math.log(tile+1,2))])
                 else:
-                    self.labels[row][col].config(bg = COLORS[-1])
+                    self.tiles[row][col].config(bg = COLORS[-1])
                 #Update tile text color
                 if tile < 8:
-                    self.labels[row][col].config(fg = "dim gray")
+                    self.tiles[row][col].config(fg = "dim gray")
                 else:
-                    self.labels[row][col].config(fg = "white")
+                    self.tiles[row][col].config(fg = "white")
                 #Update tile text
                 if tile == 0:
-                    self.labels[row][col].config(text = '')
+                    self.tiles[row][col].config(text = '')
                 else:
-                    self.labels[row][col].config(text = tile)
+                    self.tiles[row][col].config(text = tile)
                 
-                #Update scores
-                self.scoreLabel2.config(text = score)
-                self.scoreLabel2.config(text = highscore)
+    def update_scores(self,score,highscore):        
+        self.scoreLabel2.config(text = score)
+        self.highScoreLabel2.config(text = highscore)
 
-    def makeGameOver(self):
+    def show_game_over(self):
+        self.gameOverLabel1.config(text='Game')
+        self.gameOverLabel2.config(text='over')
 
-        if self.score > self.highscore:
-            highscores = open("highscores2048.txt", 'w')
-            highscores.write(str(self.score))
-            self.highScoreLabel2.config(text = self.score)
-            highscores.close()
-
+    def clear_game_over(self):
+        self.gameOverLabel1.config(text='')
+        self.gameOverLabel2.config(text='')
+        
 
 class Controller2048():
     def __init__(self):      
@@ -187,9 +193,10 @@ class Controller2048():
 
         self.root = tk.Tk()
         self.game = Game2048(highscore)
-        self.gui = GUI2048(self.root,self.handle_restart_clicked, highscore)
-        self.gui.update(self.game.board,self.game.score,self.game.highscore)
-        
+        self.gui = GUI2048(self.root,self.handle_restart_clicked)
+        self.gui.update_tiles(self.game.board)
+        self.gui.update_scores(self.game.score,self.game.highscore)
+
     def play_with_keyboard(self):
         self.root.bind("<Left>", self.handle_button_pressed)
         self.root.bind("<Up>", self.handle_button_pressed)
@@ -211,22 +218,18 @@ class Controller2048():
             self.game.move_down()
         else:
             return
-        self.gui.update(self.game.board,self.game.score, self.game.highscore)
+
+        if self.game.is_finished:
+            self.gui.show_game_over()
+        self.gui.update_tiles(self.game.board)
+        self.gui.update_scores(self.game.score, self.game.highscore)
         
     def handle_restart_clicked(self,event):
-        pass
-
-    '''def restart(self):
-        for row in range(ROWS):
-            for col in range(COLS):
-                self.board[row][col] = None
-        self.score = 0
-        self.placeRandom()
-        self.updateLabels()
-        self.restartButton.grid_remove()
-        self.gameOverLabel1.grid_remove()
-        self.gameOverLabel2.grid_remove()
-'''
+        self.game = Game2048(self.game.highscore)
+        self.gui.update_tiles(self.game.board)
+        self.gui.update_scores(self.game.score,self.game.highscore)
+        self.gui.clear_game_over()
+        
 def main():
     controller = Controller2048()
     controller.play_with_keyboard()
