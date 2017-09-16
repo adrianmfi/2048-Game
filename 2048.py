@@ -2,15 +2,6 @@ import tkinter as tk
 import random
 import math
 import itertools
-'''
-TODO:
-Consider merging all move and pressed functions into one function to avoid code redundancy
-Game over functionality
-Scoreboard
-Server highscore
-Splitting into GUI class and game class?
-'''
-
 
 ROWS = 4
 COLS = 4
