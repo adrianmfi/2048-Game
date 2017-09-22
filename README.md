@@ -1,4 +1,4 @@
-# 2048-Game
+# twenty-fourtyeight
 Simple game of 2048 using tkinter.
 
 Made using python 3
