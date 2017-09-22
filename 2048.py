@@ -69,7 +69,7 @@ class Game2048():
         for current_col in range(COLS-1):
             if self.board[row][current_col] == 0:
                 continue
-            for next_col in range(current_col,COLS):
+            for next_col in range(current_col+1,COLS):
                 if self.board[row][current_col] == self.board[row][next_col]:
                     self.board[row][current_col] = 2*self.board[row][current_col]
                     self.board[row][next_col] = 0
