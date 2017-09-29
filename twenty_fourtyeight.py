@@ -66,15 +66,50 @@ class Game2048():
 
     def _move_row_left(self,row):
         #Merge tiles
-        for current_col in range(COLS-1):
+        '''
+        current_col = 0
+        avail_col = 0
+        while current_col < COLS-1:
             if self.board[row][current_col] == 0:
+                current_col += 1
                 continue
-            for next_col in range(current_col+1,COLS):
+            next_col = current_col + 1
+            while next_col < COLS:
+                if self.board[row][next_col] == 0:
+                    next_col += 1
+                    continue   
+                print(row,current_col,next_col)
+                current_val = self.board[row][current_col]
                 if self.board[row][current_col] == self.board[row][next_col]:
-                    self.board[row][current_col] = 2*self.board[row][current_col]
+                    self.board[row][current_col] = 0
                     self.board[row][next_col] = 0
-                    self.score +=  2*self.board[row][current_col]
-                    break
+                    self.board[row][avail_col] = 2*current_val
+                    self.score +=  2*current_val
+                    avail_col += 1
+                    current_col = next_col + 1
+                else:
+                    self.board[row][current_col] = 0
+                    self.board[row][avail_col] = current_val
+                    current_col = next_col
+        '''
+        current_col = 0
+        current_val = 0
+        for next_col in range(COLS):
+            next_val = self.board[row][next_col]
+            if next_val != 0:
+                if current_val == 0:
+                    current_val = next_val
+                    current_col = next_col
+                elif current_val == next_val:
+                    self.score += 2*current_val
+                    self.board[row][current_col] = 2*current_val
+                    self.board[row][next_col] = 0
+                    current_col = next_col
+                    current_val = 0
+                else:
+                    current_col = next_col
+                    current_val = next_val
+
         #Move tiles left
         self.board[row] = list(filter(lambda x: x > 0,self.board[row]))
         self.board[row] += [0]* (COLS-len(self.board[row]))
@@ -205,7 +240,7 @@ class Controller2048():
             self.game.move_down()
         else:
             return
-        print (self.game.board)
+
         if self.game.is_finished:
             self.gui.show_game_over()
         self.gui.update_tiles(self.game.board)
