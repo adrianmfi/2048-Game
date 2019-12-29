@@ -66,32 +66,6 @@ class Game2048():
 
     def _move_row_left(self,row):
         #Merge tiles
-        '''
-        current_col = 0
-        avail_col = 0
-        while current_col < COLS-1:
-            if self.board[row][current_col] == 0:
-                current_col += 1
-                continue
-            next_col = current_col + 1
-            while next_col < COLS:
-                if self.board[row][next_col] == 0:
-                    next_col += 1
-                    continue   
-                print(row,current_col,next_col)
-                current_val = self.board[row][current_col]
-                if self.board[row][current_col] == self.board[row][next_col]:
-                    self.board[row][current_col] = 0
-                    self.board[row][next_col] = 0
-                    self.board[row][avail_col] = 2*current_val
-                    self.score +=  2*current_val
-                    avail_col += 1
-                    current_col = next_col + 1
-                else:
-                    self.board[row][current_col] = 0
-                    self.board[row][avail_col] = current_val
-                    current_col = next_col
-        '''
         current_col = 0
         current_val = 0
         for next_col in range(COLS):
